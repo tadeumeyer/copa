@@ -47,14 +47,22 @@ def get_last_modified():
 
 
 def get_export_urls(node_ids):
-    ids_str = ",".join(node_ids)
-    url = f"https://api.figma.com/v1/images/{FILE_KEY}?ids={ids_str}&scale=2&format=png"
-    r = requests.get(url, headers=HEADERS, timeout=60)
-    r.raise_for_status()
-    data = r.json()
-    if data.get("err"):
-        raise RuntimeError(f"Figma export error: {data['err']}")
-    return data["images"]
+    all_images = {}
+    batch_size = 5
+    for i in range(0, len(node_ids), batch_size):
+        batch = node_ids[i : i + batch_size]
+        ids_str = ",".join(batch)
+        url = f"https://api.figma.com/v1/images/{FILE_KEY}?ids={ids_str}&scale=2&format=png"
+        print(f"  Batch {i // batch_size + 1}: {ids_str}")
+        r = requests.get(url, headers=HEADERS, timeout=60)
+        if not r.ok:
+            print(f"  Figma API error {r.status_code}: {r.text}")
+            r.raise_for_status()
+        data = r.json()
+        if data.get("err"):
+            raise RuntimeError(f"Figma export error: {data['err']}")
+        all_images.update(data["images"])
+    return all_images
 
 
 def download(url, dest):
