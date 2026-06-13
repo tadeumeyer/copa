@@ -47,12 +47,9 @@ def get_last_modified():
 
 
 def get_export_urls(node_ids):
-    r = requests.get(
-        f"https://api.figma.com/v1/images/{FILE_KEY}",
-        headers=HEADERS,
-        params={"ids": ",".join(node_ids), "scale": "2", "format": "png"},
-        timeout=60,
-    )
+    ids_str = ",".join(node_ids)
+    url = f"https://api.figma.com/v1/images/{FILE_KEY}?ids={ids_str}&scale=2&format=png"
+    r = requests.get(url, headers=HEADERS, timeout=60)
     r.raise_for_status()
     data = r.json()
     if data.get("err"):
